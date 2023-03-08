@@ -29,7 +29,9 @@ contract StakingHub is ERC4626, Ownable{
 
 
     /**
-     * @dev 初始化底层资产地址（aleo）、年化利率（默认4%）、代币名称和符号(stAleo).
+     * @dev 初始化底层资产地址（aleo）、年化利率（默认4%）、LP代币名称和符号(stAleo).
+     * @param asset_ 资产地址
+     * @param profitRate_ 年利率
      */
     constructor(IERC20 asset_, uint16 profitRate_) ERC4626(asset_) ERC20("stAleo", "stAleo"){
         require(profitRate_ < 10000, "year's profit rate must less than 100%");
@@ -108,7 +110,8 @@ contract StakingHub is ERC4626, Ownable{
     }
 
     /**
-     * @dev 领取奖励入口 .
+     * @dev 领取奖励入口.
+     * @param amount 领取奖励金额
      *
      */
     function claimReward(uint256 amount) public {
@@ -142,27 +145,30 @@ contract StakingHub is ERC4626, Ownable{
     }
 
     /**
-     * @dev 根据线性释放公式，计算已实现利润。
+     * @dev 根据线性释放公式，计算已实现利润.
+     * @param user 领取奖励的用户
+     * @param timestamp 区块时间
      */
-    function linearReward(address player, uint256 timestamp) public view returns (uint256) {
+    function linearReward(address user, uint256 timestamp) public view returns (uint256) {
         // 根据线性释放公式，计算已实现利润
-        if (startTimes[player] == 0 || timestamp < startTimes[player]) {
+        if (startTimes[user] == 0 || timestamp < startTimes[user]) {
             return 0;
         } else {
             // 计算年利润
-            uint256 reward = (IERC20(super.asset()).balanceOf(player) * _profitRate) / 10000;
+            uint256 reward = (IERC20(super.asset()).balanceOf(user) * _profitRate) / 10000;
             // 返回已实现利润
-            return (reward * (timestamp - startTimes[player])) / (365 days);
+            return (reward * (timestamp - startTimes[user])) / (365 days);
         }
     }
 
     /**
      * @dev 协议资金提取.
+     * @param amount 提取金额
      */
     function withdrawProtocol(uint256 amount) external onlyOwner {
 
         uint256 balance = IERC20(super.asset()).balanceOf(address(this));
-        require(balance + 1 > amount, "ERC4626: amount more than protocol balance");
+        require(amount <= balance, "ERC4626: amount more than protocol balance");
 
         IERC20(super.asset()).transfer(msg.sender, amount);
         emit WithdrawProtocol(msg.sender, amount);
@@ -173,16 +179,16 @@ contract StakingHub is ERC4626, Ownable{
                             状态查询逻辑
     //////////////////////////////////////////////////////////////*/
     /**
-     * @dev 查询存款余额.
-     *
+     * @dev 查询用户存款余额.
+     * @param user 用户
      */
     function reviewAssets(address user) public view returns(uint256) {
         return balanceOf(user);
     }
 
     /**
-     * @dev 查询可领取奖励.
-     *
+     * @dev 查询用户可领取奖励.
+     * @param user 用户
      */
     function reviewReward(address user) public view returns(uint256) {
         // 计算最新一次存款时间段的利润 + 历史未领取利润
