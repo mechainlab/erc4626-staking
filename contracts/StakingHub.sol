@@ -177,8 +177,7 @@ contract StakingHub is ERC4626, Ownable{
      *
      */
     function reviewAssets(address user) public view returns(uint256) {
-        uint256 assets = IERC20(super.asset()).balanceOf(user);
-        return assets;
+        return balanceOf(user);
     }
 
     /**
