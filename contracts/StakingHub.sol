@@ -225,8 +225,8 @@ contract StakingHub is ERC4626, Ownable{
      * @param timestamp 区块时间
      */
     function linearReward(address user, uint256 timestamp) internal view returns (uint256) {
-        // 根据线性释放公式，计算已实现利息
         if (startTimes[user] == 0 || timestamp < startTimes[user]) {
+            // 没有计息开始日期||时间非法，直接返回0
             return 0;
         } else {
             // 计算年利息
