@@ -146,7 +146,7 @@ contract StakingHub is ERC4626, Ownable{
      */
     function linearReward(address player, uint256 timestamp) public view returns (uint256) {
         // 根据线性释放公式，计算已实现利润
-        if (timestamp < startTimes[player]) {
+        if (startTimes[player] == 0 || timestamp < startTimes[player]) {
             return 0;
         } else {
             // 计算年利润

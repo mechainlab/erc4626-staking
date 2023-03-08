@@ -1,6 +1,6 @@
-const aleo_address = "0x72e5D384E49Bb1141b7710147fB2c34d781060d8";
+const aleo_address = "0x89f3205387fcDCCEfE24a85923Dc458Fe2723B31";
 const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json");
-const stakingHub_address = "0xEc2Db6A2B6A99448f30D224Af358c9f93778bF7a";
+const stakingHub_address = "0xFD90eA2DaD3a059aaaEAfAf5049047b835f98913";
 const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
 
 const overrides = {
@@ -18,32 +18,32 @@ async function main() {
   const signer = new ethers.Wallet(privateKey, customHttpProvider);
   console.log(signer.address);
 
-  // let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
-  // console.log("approve1...");
-  // await token.approve(stakingHub_address, 100 * 10 ** 6, overrides);
-  // console.log("approve2...");
+  let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
+  console.log("approve1...");
+  await token.approve(stakingHub_address, 100 * 10 ** 6, overrides);
+  console.log("approve2...");
 
   let StakingHub = new ethers.Contract(
     stakingHub_address,
     StakingHubArtifact.abi,
     signer
   );
-  // let deposit = await StakingHub.deposit(
-  //   100 * 10 ** 6,
-  //   signer.address,
-  //   overrides
-  // );
-  // console.log("deposit:" + deposit.hash);
+  let deposit = await StakingHub.deposit(
+    100 * 10 ** 6,
+    signer.address,
+    overrides
+  );
+  console.log("deposit:" + deposit.hash);
 
-  // await new Promise((resolve, reject) => {
-  //   setTimeout(function () {
-  //     resolve('time')
-  //   }, 3000)
-  // })
+  await new Promise((resolve, reject) => {
+    setTimeout(function () {
+      resolve('time')
+    }, 3000)
+  })
 
 
-  // let staking_balance = await StakingHub.reviewReward(signer.address);
-  // console.log("user's staking balance: " + staking_balance);
+  let reviewAssets = await StakingHub.reviewAssets(signer.address);
+  console.log("user's staking balance: " + reviewAssets);
 
   let staking_reward = await StakingHub.reviewReward(signer.address);
   console.log("user's staking reward: " + staking_reward);
