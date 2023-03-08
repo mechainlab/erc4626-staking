@@ -12,6 +12,8 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
  * @dev StakingHub，存入aleo，赚取利息
  * @dev 继承ERC4626"代币化金库标准"的实现：https://eips.ethereum.org/EIPS/eip-4626[EIP-4626].
  * @dev 并在ERC4626金库标准上增加利息奖励的相关逻辑
+ *
+ * @notice 协议奖励以实际链上状态为准，领取完则结束产生利息，资金逻辑以代码为准；
  */
 contract StakingHub is ERC4626, Ownable{
 
@@ -122,8 +124,7 @@ contract StakingHub is ERC4626, Ownable{
         require(amount < maxReward, "ERC4626: claimReward more than maxReward");
 
         // 更新待领取利息
-        unclaimedRewards[msg.sender] = maxReward;
-        unclaimedRewards[msg.sender] -= amount;
+        unclaimedRewards[msg.sender] = maxReward - amount;
         // 更新计息开始时间
         startTimes[msg.sender] = block.timestamp;
         // 转出利息给用户
@@ -222,6 +223,16 @@ contract StakingHub is ERC4626, Ownable{
 
         IERC20(super.asset()).transfer(msg.sender, amount);
         emit WithdrawProtocol(msg.sender, amount);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            限额逻辑
+    //////////////////////////////////////////////////////////////*/
+    /** @dev See {IERC4626-maxDeposit}. */
+    function maxDeposit(address receiver) public view override returns (uint256) {
+        uint256 balance = IERC20(super.asset()).balanceOf(receiver);
+        //max deposit is 10000;
+        return 10000 * 10 ** 6 - balance;
     }
 
 
