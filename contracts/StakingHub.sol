@@ -6,10 +6,10 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-
+import "./RewardVault.sol";
 
 /**
- * @dev StakingHub，存入aleo，赚取利息
+ * @title StakingHub，存入aleo，赚取利息
  * @dev 继承ERC4626"代币化金库标准"的实现：https://eips.ethereum.org/EIPS/eip-4626[EIP-4626].
  * @dev 并在ERC4626金库标准上增加利息奖励的相关逻辑
  *
@@ -30,17 +30,24 @@ contract StakingHub is ERC4626, Ownable{
     uint16 public _profitRate = 400; // 年化利率 = profitRate/10000
     mapping(address => uint256) public unclaimedRewards; // 代币地址->待领取利息的映射，记录待领取的利息
     mapping(address => uint256) public startTimes; // 代币地址->存款日期，记录计息开始时间
+    address public _rewardValult;
 
 
     /**
      * @dev 初始化底层资产地址（aleo）、年化利率（默认4%）、LP代币名称和符号(stAleo).
      * @param asset_ 资产地址
+     * @param rewardAsset_ 奖励资产地址
      * @param profitRate_ 年利率
      */
-    constructor(IERC20 asset_, uint16 profitRate_) ERC4626(asset_) ERC20("stAleo", "stAleo"){
+    constructor(IERC20 asset_, address rewardAsset_, uint16 profitRate_) ERC4626(asset_) ERC20("stAleo", "stAleo"){
         require(profitRate_ < 10000, "year's profit rate must less than 100%");
         _profitRate = profitRate_;
+
+        //创建奖励金库
+        RewardVault rewardVault_ =new RewardVault(rewardAsset_);
+        _rewardValult = address(rewardVault_);    
     }
+
 
 
 
@@ -57,11 +64,19 @@ contract StakingHub is ERC4626, Ownable{
      */
     function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
         require(assets <= maxDeposit(receiver), "ERC4626: deposit more than max");
+        uint256 rewardValultBalance = RewardVault(_rewardValult).balance();
+        require(rewardValultBalance > 0 , "ERC4626: no reward balance");
 
         // 每次用户余额变动时，根据变动前的余额和已存入时间段，计算待领取利息数量
         unclaimedRewards[receiver] += linearReward(receiver, uint256(block.timestamp));
         // 更新存款开始时间
         startTimes[receiver] = block.timestamp;
+
+        //update profitRate
+        if(rewardValultBalance * 2 < RewardVault(_rewardValult).lastAmount()){
+            _profitRate = _profitRate/2;
+            RewardVault(_rewardValult).updateLastAmount(rewardValultBalance);
+        }
 
         // 根据存入资产数量计算需要mint的份额凭证，默认为1:1的关系
         uint256 shares = previewDeposit(assets);
@@ -128,7 +143,7 @@ contract StakingHub is ERC4626, Ownable{
         // 更新计息开始时间
         startTimes[msg.sender] = block.timestamp;
         // 转出利息给用户
-        IERC20(super.asset()).transfer(msg.sender, amount);
+        RewardVault(_rewardValult).transfer(msg.sender, amount);
         emit WithdrawRewards(msg.sender, amount);
     }
 
@@ -144,7 +159,7 @@ contract StakingHub is ERC4626, Ownable{
         // 更新计息开始时间
         startTimes[msg.sender] = block.timestamp;
         // 转出利息给用户
-        IERC20(super.asset()).transfer(msg.sender, reward);
+        RewardVault(_rewardValult).transfer(msg.sender, reward);
         emit WithdrawRewards(msg.sender, reward);
     }
 
@@ -218,10 +233,10 @@ contract StakingHub is ERC4626, Ownable{
      */
     function withdrawProtocol(uint256 amount) external onlyOwner {
 
-        uint256 balance = IERC20(super.asset()).balanceOf(address(this));
+        uint256 balance = RewardVault(_rewardValult).balance();
         require(amount <= balance, "ERC4626: amount more than protocol balance");
+        RewardVault(_rewardValult).transfer(msg.sender, amount);
 
-        IERC20(super.asset()).transfer(msg.sender, amount);
         emit WithdrawProtocol(msg.sender, amount);
     }
 

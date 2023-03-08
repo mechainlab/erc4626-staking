@@ -25,7 +25,7 @@ async function main() {
 
   ///delploy StakingHub
   const StakingHub = await ethers.getContractFactory("StakingHub");
-  const stakingHub = await StakingHub.deploy(aleoToken.address, 500);
+  const stakingHub = await StakingHub.deploy(aleoToken.address, aleoToken.address, 500);
   await stakingHub.deployed();
   console.log("stakingHub address:", stakingHub.address);
 
