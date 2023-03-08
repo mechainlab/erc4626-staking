@@ -10,10 +10,10 @@ import "./RewardVault.sol";
 
 /**
  * @title StakingHub，存入aleo，赚取利息
- * @dev 继承ERC4626"代币化金库标准"的实现：https://eips.ethereum.org/EIPS/eip-4626[EIP-4626].
+ * @dev 继承ERC4626"代币化金库标准"的实现：https://eips.ethereum.org/EIPS/eip-4626[EIP-4626],
  * @dev 并在ERC4626金库标准上增加利息奖励的相关逻辑
  *
- * @notice 协议奖励以实际链上状态为准，领取完则结束产生利息，资金逻辑以代码为准；
+ * @notice 协议奖励以实际链上状态为准，领取完则结束产生利息，资金逻辑以代码为准;
  */
 contract StakingHub is ERC4626, Ownable{
 
@@ -64,19 +64,23 @@ contract StakingHub is ERC4626, Ownable{
      */
     function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
         require(assets <= maxDeposit(receiver), "ERC4626: deposit more than max");
+
+        /******************************** 新增利息计算逻辑start **********************************/
+
         uint256 rewardValultBalance = RewardVault(_rewardValult).balance();
         require(rewardValultBalance > 0 , "ERC4626: no reward balance");
 
-        // 每次用户余额变动时，根据变动前的余额和已存入时间段，计算待领取利息数量
-        unclaimedRewards[receiver] += linearReward(receiver, uint256(block.timestamp));
-        // 更新存款开始时间
-        startTimes[receiver] = block.timestamp;
+        // 每次用户余额变动时，根据变动前的余额和存入时间段，更新待领取利息
+        updateRewardRecord(receiver);
 
-        //update profitRate
+        // 奖励金库减半后，更新利率
         if(rewardValultBalance * 2 < RewardVault(_rewardValult).lastAmount()){
             _profitRate = _profitRate/2;
             RewardVault(_rewardValult).updateLastAmount(rewardValultBalance);
         }
+
+        /******************************** 新增利息计算逻辑end **********************************/
+
 
         // 根据存入资产数量计算需要mint的份额凭证，默认为1:1的关系
         uint256 shares = previewDeposit(assets);
@@ -98,10 +102,11 @@ contract StakingHub is ERC4626, Ownable{
     function withdraw(uint256 assets, address receiver, address owner) public virtual override returns (uint256) {
         require(assets <= maxWithdraw(owner), "ERC4626: balance more than max");
 
-        // 每次用户余额变动时，根据变动前的余额和存入时间段，计算待领取利息数量
-        unclaimedRewards[owner] += linearReward(owner, uint256(block.timestamp));
-        // 更新存款开始时间
-        startTimes[owner] = block.timestamp;
+        /******************************** 新增利息计算逻辑start **********************************/
+
+        // 每次用户余额变动时，根据变动前的余额和存入时间段，更新待领取利息
+        updateRewardRecord(owner);
+        /******************************** 新增利息计算逻辑end **********************************/
 
         // 根据提取资产数量计算需要销毁的份额凭证，默认为1:1的关系
         uint256 shares = previewWithdraw(assets);
@@ -137,11 +142,8 @@ contract StakingHub is ERC4626, Ownable{
         // 计算最新一次存款时间段的利息 + 历史未领取利息
         uint256 maxReward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
         require(amount < maxReward, "ERC4626: claimReward more than maxReward");
-
-        // 更新待领取利息
-        unclaimedRewards[msg.sender] = maxReward - amount;
-        // 更新计息开始时间
-        startTimes[msg.sender] = block.timestamp;
+        // 更新待领取利息、计息起始时间
+        updateRewardRecord(msg.sender);
         // 转出利息给用户
         RewardVault(_rewardValult).transfer(msg.sender, amount);
         emit WithdrawRewards(msg.sender, amount);
@@ -154,10 +156,8 @@ contract StakingHub is ERC4626, Ownable{
     function withdrawAllRewards() public {
         // 计算最新一次存款时间段的利息 + 历史未领取利息
         uint256 reward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
-        // 更新待领取利息为0
-        unclaimedRewards[msg.sender] = 0;
-        // 更新计息开始时间
-        startTimes[msg.sender] = block.timestamp;
+        // 更新待领取利息、计息起始时间
+        updateRewardRecord(msg.sender);
         // 转出利息给用户
         RewardVault(_rewardValult).transfer(msg.sender, reward);
         emit WithdrawRewards(msg.sender, reward);
@@ -170,17 +170,16 @@ contract StakingHub is ERC4626, Ownable{
      */
     function transfer(address to, uint256 amount) public override returns (bool) {
         address owner = _msgSender();
+
+        /******************************** 新增利息计算逻辑start **********************************/
+        //更新待领取利息、计息起始时间
+        updateRewardRecord(owner);
+
+        updateRewardRecord(to);
+        /******************************** 新增利息计算逻辑end **********************************/
+
         _transfer(owner, to, amount);
 
-        // 余额变动，计算待领取利息
-        unclaimedRewards[owner] += linearReward(owner, uint256(block.timestamp));
-        // 更新存款开始时间
-        startTimes[owner] = block.timestamp;
-
-        // 余额变动，计算待领取利息
-        unclaimedRewards[to] += linearReward(to, uint256(block.timestamp));
-        // 更新存款开始时间
-        startTimes[to] = block.timestamp;
         return true;
     }
 
@@ -194,20 +193,30 @@ contract StakingHub is ERC4626, Ownable{
         address to,
         uint256 amount
     ) public override returns (bool) {
+        
+        /******************************** 新增利息计算逻辑start **********************************/
+        // 更新待领取利息、计息起始时间
+        updateRewardRecord(from);
+
+        updateRewardRecord(to);
+        /******************************** 新增利息计算逻辑end **********************************/
+
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
 
-        // 余额变动，计算待领取利息
-        unclaimedRewards[from] += linearReward(from, uint256(block.timestamp));
-        // 更新存款开始时间
-        startTimes[from] = block.timestamp;
-
-        // 余额变动，计算待领取利息
-        unclaimedRewards[to] += linearReward(to, uint256(block.timestamp));
-        // 更新存款开始时间
-        startTimes[to] = block.timestamp;
         return true;
+    }
+
+    /**
+     * @dev 更新待领取利息、计息起始时间.
+     * @param user 用户.
+     */
+    function updateRewardRecord(address user) internal{
+        // 更新待领取利息
+        unclaimedRewards[user] += linearReward(user, uint256(block.timestamp));
+        // 更新存款开始时间
+        startTimes[user] = block.timestamp;
     }
 
     /**
