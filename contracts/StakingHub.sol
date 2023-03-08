@@ -67,6 +67,7 @@ contract StakingHub is ERC4626, Ownable{
 
         /******************************** 新增利息计算逻辑start **********************************/
 
+        // 校验剩余利息
         uint256 rewardValultBalance = RewardVault(_rewardValult).balance();
         require(rewardValultBalance > 0 , "ERC4626: no reward balance");
 
