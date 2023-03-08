@@ -79,7 +79,6 @@ contract StakingHub is ERC4626, Ownable{
             _profitRate = _profitRate/2;
             RewardVault(_rewardValult).updateLastAmount(rewardValultBalance);
         }
-
         /******************************** 新增利息计算逻辑end **********************************/
 
 
@@ -142,7 +141,7 @@ contract StakingHub is ERC4626, Ownable{
     function withdrawRewards(uint256 amount) external {
         // 计算最新一次存款时间段的利息 + 历史未领取利息
         uint256 maxReward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
-        require(amount < maxReward, "ERC4626: claimReward more than maxReward");
+        require(amount <= maxReward, "ERC4626: claimReward more than maxReward");
         // 更新待领取利息、计息起始时间
         updateRewardRecord(msg.sender);
         // 转出利息给用户
