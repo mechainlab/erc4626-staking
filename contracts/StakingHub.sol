@@ -30,7 +30,7 @@ contract StakingHub is ERC4626, Ownable{
     uint16 public _profitRate = 400; // 年化利率 = profitRate/10000
     mapping(address => uint256) public unclaimedRewards; // 代币地址->待领取利息的映射，记录待领取的利息
     mapping(address => uint256) public startTimes; // 代币地址->存款日期，记录计息开始时间
-    address public _rewardValult;
+    address public _rewardValult; //StakingHub的利息金库, 和本金隔离;
 
 
     /**
