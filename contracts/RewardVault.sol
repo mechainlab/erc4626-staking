@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
- * @title RewardVault 金库
+ * @title RewardVault 奖励金库，用于发放利息
  * @dev 管理StakingHub的利息
  *
  * @notice 协议奖励以实际链上状态为准，领取完则结束产生利息，资金逻辑以代码为准；

@@ -273,11 +273,21 @@ contract StakingHub is ERC4626, Ownable{
     }
 
     /**
-     * @dev 查询协议资金.
+     * @dev 查询协议总存款余额.
      *
      */
     function reviewProtocol() external view returns(uint256) {
         uint256 balance = IERC20(super.asset()).balanceOf(address(this));
         return balance;
     }
+
+    /**
+     * @dev 查询协议奖励金库余额.
+     *
+     */
+    function reviewRewardVault() external view returns(uint256) {
+        uint256 balance = RewardVault(_rewardValult).balance();
+        return balance;
+    }
+
 }
