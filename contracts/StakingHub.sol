@@ -5,6 +5,8 @@ import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.so
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+
 
 /**
  * @dev StakingHub，存入aleo，赚取利息
@@ -227,11 +229,11 @@ contract StakingHub is ERC4626, Ownable{
                             状态查询逻辑
     //////////////////////////////////////////////////////////////*/
     /**
-     * @dev 查询用户存款余额.
+     * @dev 查询用户存款.
      * @param user 用户
      */
     function reviewAssets(address user) external view returns(uint256) {
-        return balanceOf(user);
+        return _convertToAssets(balanceOf(user), Math.Rounding.Down);
     }
 
     /**

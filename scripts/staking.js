@@ -19,9 +19,8 @@ async function main() {
   console.log(signer.address);
 
   let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
-  console.log("approve1...");
+  console.log("approve...");
   await token.approve(stakingHub_address, 100 * 10 ** 6, overrides);
-  console.log("approve2...");
 
   let StakingHub = new ethers.Contract(
     stakingHub_address,
