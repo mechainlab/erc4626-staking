@@ -1,42 +1,47 @@
-const usdt_address = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9';
 
 
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
 async function main() {
+  ///prepare deployer
   const [deployer] = await ethers.getSigners();
-
   console.log(
     "Deploying contracts with the account:",
     await deployer.getAddress()
   );
-  
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  const AD3Hub = await ethers.getContractFactory("AD3Hub");
-  const ad3Hub = await AD3Hub.deploy();
-  await ad3Hub.deployed();
-  console.log("ad3Hub address:", ad3Hub.address);
 
-  const USDT = await ethers.getContractFactory("TetherToken");
-  const token = await USDT.deploy(10 ** 12); //totalSupply = $10 ** 6
-  await token.deployed();
-  console.log("token address:", token.address);
+  ///deploy AleoToken
+  const AleoToken = await ethers.getContractFactory("AleoToken");
+  const aleoToken = await AleoToken.deploy(10 ** 12); //totalSupply = $10 ** 6
+  await aleoToken.deployed();
+  console.log("aleoToken address:", aleoToken.address);
 
-  let balance = await token.balanceOf(deployer.getAddress());
-  console.log("balance:" + balance);
+  let deployer_balance = await aleoToken.balanceOf(deployer.getAddress());
+  console.log("deployer_balance:" + deployer_balance);
 
-  const Campaign = await ethers.getContractFactory("Campaign");
-  const campaign = await Campaign.deploy();
-  await campaign.deployed();
-  console.log("campaignImpl address:", campaign.address);
 
-  await ad3Hub.setCampaignImpl(campaign.address);
+  ///delploy StakingHub
+  const StakingHub = await ethers.getContractFactory("StakingHub");
+  const stakingHub = await StakingHub.deploy(aleoToken.address, 500);
+  await stakingHub.deployed();
+  console.log("stakingHub address:", stakingHub.address);
 
-  // await ad3Hub.setPaymentToken(token.address);
+  ///prepare fund of StakingHub
+  await aleoToken.transfer(stakingHub.address, 100000);
+  await new Promise((resolve, reject) => {
+    setTimeout(function () {
+      resolve('time')
+    }, 3000)
+  })
+
+  let stakingHub_balance = await aleoToken.balanceOf(stakingHub.address);
+  console.log("stakingHub_balance:" + stakingHub_balance);
+
+  let reviewProtocol = await stakingHub.reviewProtocol();
+  console.log("reviewProtocol:" + reviewProtocol);
   
-  await ad3Hub.setTrustedSigner(deployer.address);
-
 }
 
 

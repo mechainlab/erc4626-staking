@@ -2,20 +2,22 @@
 pragma solidity ^0.8.0;
 
 import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import {ERC20, IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @dev StakingHub
+ * @dev 继承ERC4626"代币化金库标准"的实现：https://eips.ethereum.org/EIPS/eip-4626[EIP-4626].
+ * @dev 并在ERC4626金库标准上增加利息奖励的相关逻辑
  */
-contract StakingHub is ERC4626 {
+contract StakingHub is ERC4626, Ownable{
 
    /*//////////////////////////////////////////////////////////////
                     事件
    //////////////////////////////////////////////////////////////*/
-   event depositAsset(address indexed user, uint256 amount);
-   event widthdraw(address indexed user, uint256 amount);
-   event claimedReward(address indexed user, uint256 amount);
+   event ClaimedReward(address indexed user, uint256 amount);
+   event WithdrawProtocol(address indexed owner, uint256 amount);
 
 
     /*//////////////////////////////////////////////////////////////
@@ -27,7 +29,7 @@ contract StakingHub is ERC4626 {
 
 
     /**
-     * @dev 初始化底层资产地址、年化利率、代币名称和符号(stAleo).
+     * @dev 初始化底层资产地址（aleo）、年化利率（默认4%）、代币名称和符号(stAleo).
      */
     constructor(IERC20 asset_, uint16 profitRate_) ERC4626(asset_) ERC20("stAleo", "stAleo"){
         require(profitRate_ < 10000, "year's profit rate must less than 100%");
@@ -95,7 +97,7 @@ contract StakingHub is ERC4626 {
     function withdrawAndClaim() public returns (uint256) {
         require(balanceOf(msg.sender) > 0, "ERC4626: no balance");
         // 提取利润
-        claimReward();
+        claimAllReward();
 
         // 提取本金
         uint256 assets = IERC20(super.asset()).balanceOf(msg.sender);
@@ -109,17 +111,34 @@ contract StakingHub is ERC4626 {
      * @dev 领取奖励入口 .
      *
      */
-    function claimReward() public {
+    function claimReward(uint256 amount) public {
+        // 计算最新一次存款时间段的利润 + 历史未领取利润
+        uint256 maxReward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
+        require(amount < maxReward, "ERC4626: claimReward more than maxReward");
+
+        // 更新待领取利润为0
+        unclaimedRewards[msg.sender] -= amount;
+        // 更新计息开始时间
+        startTimes[msg.sender] = block.timestamp;
+        // 转出利润给用户
+        IERC20(super.asset()).transfer(msg.sender, amount);
+        emit ClaimedReward(msg.sender, amount);
+    }
+
+    /**
+     * @dev 领取全部奖励入口 .
+     *
+     */
+    function claimAllReward() public {
         // 计算最新一次存款时间段的利润 + 历史未领取利润
         uint256 reward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
         // 更新待领取利润为0
         unclaimedRewards[msg.sender] = 0;
         // 更新计息开始时间
         startTimes[msg.sender] = block.timestamp;
-        // 转代币给受益人
-        emit claimedReward(msg.sender, reward);
         // 转出利润给用户
         IERC20(super.asset()).transfer(msg.sender, reward);
+        emit ClaimedReward(msg.sender, reward);
     }
 
     /**
@@ -137,18 +156,47 @@ contract StakingHub is ERC4626 {
         }
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            会计逻辑
-    //////////////////////////////////////////////////////////////*/
+    /**
+     * @dev 协议资金提取.
+     */
+    function withdrawProtocol(uint256 amount) external onlyOwner {
 
+        uint256 balance = IERC20(super.asset()).balanceOf(address(this));
+        require(balance + 1 > amount, "ERC4626: amount more than protocol balance");
+
+        IERC20(super.asset()).transfer(msg.sender, amount);
+        emit WithdrawProtocol(msg.sender, amount);
+    }
+
+
+    /*//////////////////////////////////////////////////////////////
+                            状态查询逻辑
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @dev 查询存款余额.
+     *
+     */
+    function reviewAssets(address user) public view returns(uint256) {
+        uint256 assets = IERC20(super.asset()).balanceOf(user);
+        return assets;
+    }
 
     /**
-     * @dev 查询奖励.
+     * @dev 查询可领取奖励.
      *
      */
     function reviewReward(address user) public view returns(uint256) {
         // 计算最新一次存款时间段的利润 + 历史未领取利润
         uint256 reward = linearReward(user, uint256(block.timestamp)) + unclaimedRewards[user];
         return reward;
+    }
+
+    /**
+     * @dev 查询协议资金.
+     *
+     */
+    function reviewProtocol() public view returns(uint256) {
+        uint256 balance = IERC20(super.asset()).balanceOf(address(this));
+        return balance;
     }
 }

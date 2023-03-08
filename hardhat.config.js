@@ -12,7 +12,7 @@ const { GOERLI_PRIVATE_KEY, ALCHEMY_PROJECT_ID, POLYGON_TEST_PRIVATE_KEY, POLYGO
 module.exports = {
   solidity: {
     compilers: [
-      { version: "0.8.0" }
+      { version: "0.8.1" }
     ]
   },
   networks: {
