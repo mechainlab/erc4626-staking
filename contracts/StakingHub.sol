@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @dev StakingHub
+ * @dev StakingHub，存入aleo，赚取利息
  * @dev 继承ERC4626"代币化金库标准"的实现：https://eips.ethereum.org/EIPS/eip-4626[EIP-4626].
  * @dev 并在ERC4626金库标准上增加利息奖励的相关逻辑
  */
@@ -114,7 +114,7 @@ contract StakingHub is ERC4626, Ownable{
      * @param amount 领取奖励金额
      *
      */
-    function claimReward(uint256 amount) public {
+    function claimReward(uint256 amount) external {
         // 计算最新一次存款时间段的利润 + 历史未领取利润
         uint256 maxReward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
         require(amount < maxReward, "ERC4626: claimReward more than maxReward");
@@ -149,7 +149,7 @@ contract StakingHub is ERC4626, Ownable{
      * @param user 领取奖励的用户
      * @param timestamp 区块时间
      */
-    function linearReward(address user, uint256 timestamp) public view returns (uint256) {
+    function linearReward(address user, uint256 timestamp) internal view returns (uint256) {
         // 根据线性释放公式，计算已实现利润
         if (startTimes[user] == 0 || timestamp < startTimes[user]) {
             return 0;
@@ -182,7 +182,7 @@ contract StakingHub is ERC4626, Ownable{
      * @dev 查询用户存款余额.
      * @param user 用户
      */
-    function reviewAssets(address user) public view returns(uint256) {
+    function reviewAssets(address user) external view returns(uint256) {
         return balanceOf(user);
     }
 
@@ -190,7 +190,7 @@ contract StakingHub is ERC4626, Ownable{
      * @dev 查询用户可领取奖励.
      * @param user 用户
      */
-    function reviewReward(address user) public view returns(uint256) {
+    function reviewReward(address user) external view returns(uint256) {
         // 计算最新一次存款时间段的利润 + 历史未领取利润
         uint256 reward = linearReward(user, uint256(block.timestamp)) + unclaimedRewards[user];
         return reward;
@@ -200,7 +200,7 @@ contract StakingHub is ERC4626, Ownable{
      * @dev 查询协议资金.
      *
      */
-    function reviewProtocol() public view returns(uint256) {
+    function reviewProtocol() external view returns(uint256) {
         uint256 balance = IERC20(super.asset()).balanceOf(address(this));
         return balance;
     }
