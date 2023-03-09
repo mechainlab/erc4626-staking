@@ -11,6 +11,7 @@ const overrides = {
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
 async function main() {
+  ///Prepare deployer
   let privateKey = "0x8d35ea35953931a53fa05da3f396be651102514b2eac740911cb9d0aca0f8e61";
   let customHttpProvider = new ethers.providers.JsonRpcProvider(
     "http://47.242.179.164:9933"
@@ -18,6 +19,7 @@ async function main() {
   const signer = new ethers.Wallet(privateKey, customHttpProvider);
   console.log(signer.address);
 
+  ///deposit
   let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
   console.log("approve...");
   await token.approve(stakingHub_address, 100 * 10 ** 6, overrides);
@@ -40,12 +42,14 @@ async function main() {
     }, 3000)
   })
 
-
+  ///reviewAssets
   let reviewAssets = await StakingHub.reviewAssets(signer.address);
   console.log("user's staking balance: " + reviewAssets);
 
-  let staking_reward = await StakingHub.reviewReward(signer.address);
-  console.log("user's staking reward: " + staking_reward);
+  for (let i = 0; i < 10; i++) {
+    let staking_reward = await StakingHub.reviewReward(signer.address);
+    console.log("user's staking reward: " + staking_reward);
+  }
 }
 
 main()

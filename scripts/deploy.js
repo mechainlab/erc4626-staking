@@ -3,7 +3,7 @@
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
 async function main() {
-  
+
   ///prepare deployer
   const [deployer] = await ethers.getSigners();
   console.log(
@@ -30,19 +30,19 @@ async function main() {
   console.log("stakingHub address:", stakingHub.address);
 
   ///prepare fund of StakingHub
-  await aleoToken.transfer(stakingHub.address, 100000);
+  // await aleoToken.transfer(stakingHub.address, 100000);
+  await aleoToken.approve(stakingHub.address, 100 * 10 ** 6);
+  await stakingHub.prepareReward(100 * 10 ** 6);
+
   await new Promise((resolve, reject) => {
     setTimeout(function () {
       resolve('time')
     }, 3000)
   })
 
-  let stakingHub_balance = await aleoToken.balanceOf(stakingHub.address);
-  console.log("stakingHub_balance:" + stakingHub_balance);
-
   let reviewProtocol = await stakingHub.reviewProtocol();
   console.log("reviewProtocol:" + reviewProtocol);
-  
+
 }
 
 

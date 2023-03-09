@@ -39,7 +39,7 @@ contract StakingHub is ERC4626, Ownable{
      * @param rewardAsset_ 奖励资产地址
      * @param profitRate_ 年利率
      */
-    constructor(IERC20 asset_, address rewardAsset_, uint16 profitRate_) ERC4626(asset_) ERC20("stAleo", "stAleo"){
+    constructor(address asset_, address rewardAsset_, uint16 profitRate_) ERC4626(IERC20(asset_)) ERC20("stAleo", "stAleo"){
         require(profitRate_ < 10000, "year's profit rate must less than 100%");
         _profitRate = profitRate_;
 
@@ -116,6 +116,24 @@ contract StakingHub is ERC4626, Ownable{
         return shares;
     }
 
+    /**
+     * @dev 领取奖励入口.
+     * @param amount 领取奖励金额
+     *
+     */
+    function withdrawRewards(uint256 amount) external {
+        // 计算最新一次存款时间段的利息 + 历史未领取利息
+        uint256 maxReward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
+        require(amount <= maxReward, "ERC4626: claimReward more than maxReward");
+        // 更新待领取利息
+        unclaimedRewards[user] = maxReward - amount;
+        // 更新存款开始时间
+        startTimes[user] = block.timestamp;
+        // 转出利息给用户
+        RewardVault(_rewardValult).transfer(msg.sender, amount);
+        emit WithdrawRewards(msg.sender, amount);
+    }
+
 
     /**
      * @dev 取款（全部本金 + 利息).
@@ -133,21 +151,6 @@ contract StakingHub is ERC4626, Ownable{
         return shares;
     }
 
-    /**
-     * @dev 领取奖励入口.
-     * @param amount 领取奖励金额
-     *
-     */
-    function withdrawRewards(uint256 amount) external {
-        // 计算最新一次存款时间段的利息 + 历史未领取利息
-        uint256 maxReward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
-        require(amount <= maxReward, "ERC4626: claimReward more than maxReward");
-        // 更新待领取利息、计息起始时间
-        updateRewardRecord(msg.sender);
-        // 转出利息给用户
-        RewardVault(_rewardValult).transfer(msg.sender, amount);
-        emit WithdrawRewards(msg.sender, amount);
-    }
 
     /**
      * @dev 领取全部奖励入口 .
@@ -156,8 +159,10 @@ contract StakingHub is ERC4626, Ownable{
     function withdrawAllRewards() public {
         // 计算最新一次存款时间段的利息 + 历史未领取利息
         uint256 reward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
-        // 更新待领取利息、计息起始时间
-        updateRewardRecord(msg.sender);
+        // 更新待领取利息
+        unclaimedRewards[user] = 0;
+        // 更新存款开始时间
+        startTimes[user] = block.timestamp;
         // 转出利息给用户
         RewardVault(_rewardValult).transfer(msg.sender, reward);
         emit WithdrawRewards(msg.sender, reward);
@@ -236,6 +241,10 @@ contract StakingHub is ERC4626, Ownable{
         }
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            管理员逻辑
+    //////////////////////////////////////////////////////////////*/
+
     /**
      * @dev 协议资金提取.
      * @param amount 提取金额
@@ -247,6 +256,15 @@ contract StakingHub is ERC4626, Ownable{
         RewardVault(_rewardValult).transfer(msg.sender, amount);
 
         emit WithdrawProtocol(msg.sender, amount);
+    }
+
+    /**
+     * @dev 初始化协议资金.
+     * @param amount 金额
+     */
+    function prepareReward(uint256 amount) external onlyOwner {
+        address rewardAsset = RewardVault(_rewardValult).getAssetAddress();
+        IERC20(rewardAsset).transferFrom(msg.sender, _rewardValult, amount);
     }
 
     /*//////////////////////////////////////////////////////////////
