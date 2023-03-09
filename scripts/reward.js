@@ -1,6 +1,6 @@
-const aleo_address = "0x89f3205387fcDCCEfE24a85923Dc458Fe2723B31";
+const aleo_address = "0x8bcEEE23a628C8bc98df37941Ad24bD950F1853F";
 const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json");
-const stakingHub_address = "0xFD90eA2DaD3a059aaaEAfAf5049047b835f98913";
+const stakingHub_address = "0x00BF3DEeEeD0F7cdDdEe197574B82b845013fDF7";
 const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
 
 const overrides = {
@@ -11,7 +11,7 @@ const overrides = {
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
 async function main() {
-    withdrawRewards();
+    await withdrawRewards();
 }
 
 async function withdrawRewards() {
@@ -35,7 +35,21 @@ async function withdrawRewards() {
 
 
     ///Withdraw rewards
-    await StakingHub.withdrawRewards(staking_reward - 100);
+    await StakingHub.withdrawRewards(1, overrides);
+
+    // 监听转账事件
+    // const filter = {
+    //     address: stakingHub_address,
+    //     topics: [ethers.utils.id("WithdrawRewards(address,uint256)")]
+    // };
+    // let filterFrom = StakingHub.filters.Deposit();
+
+
+    // customHttpProvider.on(filter, (log) => {
+    //     console.log(`withdrawRewards event detected:`);
+    //     console.log(log);
+    // });
+
     await new Promise((resolve, reject) => {
         setTimeout(function () {
             resolve('time')
@@ -66,7 +80,7 @@ async function withdraw() {
 
 
     ///Withdraw rewards
-    await StakingHub.withdraw(review_assets - 100);
+    await StakingHub.withdraw(10 * 10 ** 6, signer.address, signer.address);
     await new Promise((resolve, reject) => {
         setTimeout(function () {
             resolve('time')
