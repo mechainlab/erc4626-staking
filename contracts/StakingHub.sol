@@ -12,7 +12,7 @@ import "./interfaces/IRewardVault.sol";
 /**
  * @title StakingHub，存入aleo，赚取奖励
  * @dev 继承ERC4626"代币化金库标准"的实现：https://eips.ethereum.org/EIPS/eip-4626[EIP-4626],
- * @dev 并在ERC4626金库标准上增加奖励奖励的相关逻辑
+ * @dev 并在ERC4626金库标准上增加奖励的相关逻辑
  *
  * @notice 协议奖励以实际链上状态为准，领取完则结束产生奖励，资金逻辑以代码为准;
  */
@@ -45,7 +45,7 @@ contract StakingHub is ERC4626, Ownable{
         _profitRate = profitRate_;
 
         //创建奖励金库
-        StandardRewardVault rewardVault_ =new StandardRewardVault(rewardAsset_);
+        StandardRewardVault rewardVault_ = new StandardRewardVault(rewardAsset_);
         _rewardValult = address(rewardVault_);    
     }
 
@@ -63,9 +63,8 @@ contract StakingHub is ERC4626, Ownable{
      * @param receiver 受益人
      *
      */
-    function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
+    function deposit(uint256 assets, address receiver) public override returns (uint256) {
         require(assets <= maxDeposit(receiver), "ERC4626: deposit more than max");
-
 
         // 校验剩余奖励
         uint256 rewardValultBalance = IRewardVault(_rewardValult).balance();
@@ -98,7 +97,7 @@ contract StakingHub is ERC4626, Ownable{
      * @param receiver 收款人
      *
      */
-    function withdraw(uint256 assets, address receiver, address owner) public virtual override returns (uint256) {
+    function withdraw(uint256 assets, address receiver, address owner) public override returns (uint256) {
         require(assets <= maxWithdraw(owner), "ERC4626: balance more than max");
 
         // 每次用户余额变动时，根据变动前的余额和存入时间段，更新待领取奖励
@@ -148,7 +147,7 @@ contract StakingHub is ERC4626, Ownable{
 
 
     /**
-     * @dev 领取全部奖励入口 .
+     * @dev 领取全部奖励入口.
      *
      */
     function withdrawAllRewards() public {
@@ -275,14 +274,14 @@ contract StakingHub is ERC4626, Ownable{
      * @param user 用户
      */
     function reviewAssets(address user) external view returns(uint256) {
-        return _convertToAssets(balanceOf(user), Math.Rounding.Down);
+        return _convertToAssets(balanceOf(user), Math.Rounding.Down) + reviewReward(user);
     }
 
     /**
      * @dev 查询用户可领取奖励.
      * @param user 用户
      */
-    function reviewReward(address user) external view returns(uint256) {
+    function reviewReward(address user) public view returns(uint256) {
         // 计算最新一次存款时间段的奖励 + 历史未领取奖励
         uint256 reward = linearReward(user, uint256(block.timestamp)) + unclaimedRewards[user];
         return reward;
