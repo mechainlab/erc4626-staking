@@ -19,7 +19,7 @@ async function main() {
 
   ///deploy AleoToken
   const AleoToken = await ethers.getContractFactory("AleoToken");
-  const aleoToken = await AleoToken.deploy(10 ** 12); //totalSupply = $10 ** 6
+  const aleoToken = await AleoToken.deploy(BigNumber.from(10 ** 12).mul(BigNumber.from(10 ** 6))); //totalSupply = $10**12 * 10**6
   await aleoToken.deployed();
   console.log("aleoToken address:", aleoToken.address);
 

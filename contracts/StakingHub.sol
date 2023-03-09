@@ -107,7 +107,7 @@ contract StakingHub is ERC4626, Ownable{
         // 根据提取资产数量计算需要销毁的份额凭证，默认为1:1的关系
         uint256 shares = previewWithdraw(assets);
         // 从协议转移资产到收款人地址，并为销毁owner对应数量的份额凭证
-        super._withdraw(_msgSender(), receiver, owner, assets, shares);
+        ERC4626._withdraw(_msgSender(), receiver, owner, assets, shares);
 
         return shares;
     }
@@ -141,7 +141,7 @@ contract StakingHub is ERC4626, Ownable{
         // 提取本金
         uint256 shares = balanceOf(msg.sender);
         uint256 assets = previewRedeem(shares);
-        super._withdraw(_msgSender(), msg.sender, msg.sender, assets, shares);
+        ERC4626._withdraw(_msgSender(), msg.sender, msg.sender, assets, shares);
 
         return shares;
     }
@@ -261,7 +261,7 @@ contract StakingHub is ERC4626, Ownable{
     //////////////////////////////////////////////////////////////*/
     /** @dev See {IERC4626-maxDeposit}. */
     function maxDeposit(address receiver) public view override returns (uint256) {
-        uint256 balance = IERC20(super.asset()).balanceOf(receiver);
+        uint256 balance = balanceOf(receiver);
         //max deposit is 10000;
         return 10000 * 10 ** 6 - balance;
     }

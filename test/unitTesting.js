@@ -3,6 +3,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 require("hardhat-gas-reporter");
 const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json");
 const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
+const { BigNumber } = require("ethers")
 
 // StakingHub contract uniting test
 describe("StakingHub Contract Test", function () {
@@ -14,7 +15,7 @@ describe("StakingHub Contract Test", function () {
 
     ///deploy AleoToken
     const AleoToken = await ethers.getContractFactory("AleoToken");
-    const aleoToken = await AleoToken.deploy(10 ** 6 * 10 ** 6); //totalSupply = $10 ** 6
+    const aleoToken = await AleoToken.deploy(BigNumber.from(10 ** 12).mul(BigNumber.from(10 ** 6))); //totalSupply = $10**12 * 10**6
     await aleoToken.deployed();
 
     ///delploy StakingHub
