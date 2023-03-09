@@ -1,6 +1,6 @@
-const aleo_address = "0x89f3205387fcDCCEfE24a85923Dc458Fe2723B31";
+const aleo_address = "0x8bcEEE23a628C8bc98df37941Ad24bD950F1853F";
 const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json");
-const stakingHub_address = "0xFD90eA2DaD3a059aaaEAfAf5049047b835f98913";
+const stakingHub_address = "0x00BF3DEeEeD0F7cdDdEe197574B82b845013fDF7";
 const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
 
 const overrides = {
@@ -20,33 +20,38 @@ async function main() {
   console.log(signer.address);
 
   ///deposit
-  let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
-  console.log("approve...");
-  await token.approve(stakingHub_address, 100 * 10 ** 6, overrides);
+  // let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
+  // console.log("approve...");
+  // await token.approve(stakingHub_address, 100 * 10 ** 6, overrides);
 
   let StakingHub = new ethers.Contract(
     stakingHub_address,
     StakingHubArtifact.abi,
     signer
   );
-  let deposit = await StakingHub.deposit(
-    100 * 10 ** 6,
-    signer.address,
-    overrides
-  );
-  console.log("deposit:" + deposit.hash);
+  // let deposit = await StakingHub.deposit(
+  //   100 * 10 ** 6,
+  //   signer.address,
+  //   overrides
+  // );
+  // console.log("deposit:" + deposit.hash);
 
-  await new Promise((resolve, reject) => {
-    setTimeout(function () {
-      resolve('time')
-    }, 3000)
-  })
+  // await new Promise((resolve, reject) => {
+  //   setTimeout(function () {
+  //     resolve('time')
+  //   }, 3000)
+  // })
 
   ///reviewAssets
   let reviewAssets = await StakingHub.reviewAssets(signer.address);
   console.log("user's staking balance: " + reviewAssets);
 
   for (let i = 0; i < 10; i++) {
+    await new Promise((resolve, reject) => {
+      setTimeout(function () {
+        resolve('time')
+      }, 2000)
+    })
     let staking_reward = await StakingHub.reviewReward(signer.address);
     console.log("user's staking reward: " + staking_reward);
   }

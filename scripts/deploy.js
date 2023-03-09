@@ -1,4 +1,8 @@
 
+const overrides = {
+  gasLimit: 15000000,
+  gasPrice: 10 * 10 ** 9,
+};
 
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
@@ -31,8 +35,8 @@ async function main() {
 
   ///prepare fund of StakingHub
   // await aleoToken.transfer(stakingHub.address, 100000);
-  await aleoToken.approve(stakingHub.address, 100 * 10 ** 6);
-  await stakingHub.prepareReward(100 * 10 ** 6);
+  await aleoToken.approve(stakingHub.address, 100 * 10 ** 6, overrides);
+  await stakingHub.prepareReward(100 * 10 ** 6, overrides);
 
   await new Promise((resolve, reject) => {
     setTimeout(function () {
@@ -40,8 +44,8 @@ async function main() {
     }, 3000)
   })
 
-  let reviewProtocol = await stakingHub.reviewProtocol();
-  console.log("reviewProtocol:" + reviewProtocol);
+  let reviewRewardVault = await stakingHub.reviewRewardVault();
+  console.log("reviewRewardVault:" + reviewRewardVault);
 
 }
 

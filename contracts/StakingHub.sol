@@ -126,9 +126,9 @@ contract StakingHub is ERC4626, Ownable{
         uint256 maxReward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
         require(amount <= maxReward, "ERC4626: claimReward more than maxReward");
         // 更新待领取利息
-        unclaimedRewards[user] = maxReward - amount;
+        unclaimedRewards[msg.sender] = maxReward - amount;
         // 更新存款开始时间
-        startTimes[user] = block.timestamp;
+        startTimes[msg.sender] = block.timestamp;
         // 转出利息给用户
         RewardVault(_rewardValult).transfer(msg.sender, amount);
         emit WithdrawRewards(msg.sender, amount);
@@ -160,9 +160,9 @@ contract StakingHub is ERC4626, Ownable{
         // 计算最新一次存款时间段的利息 + 历史未领取利息
         uint256 reward = linearReward(msg.sender, uint256(block.timestamp)) + unclaimedRewards[msg.sender];
         // 更新待领取利息
-        unclaimedRewards[user] = 0;
+        unclaimedRewards[msg.sender] = 0;
         // 更新存款开始时间
-        startTimes[user] = block.timestamp;
+        startTimes[msg.sender] = block.timestamp;
         // 转出利息给用户
         RewardVault(_rewardValult).transfer(msg.sender, reward);
         emit WithdrawRewards(msg.sender, reward);
@@ -263,7 +263,7 @@ contract StakingHub is ERC4626, Ownable{
      * @param amount 金额
      */
     function prepareReward(uint256 amount) external onlyOwner {
-        address rewardAsset = RewardVault(_rewardValult).getAssetAddress();
+        address rewardAsset = RewardVault(_rewardValult).assetAddress();
         IERC20(rewardAsset).transferFrom(msg.sender, _rewardValult, amount);
     }
 
