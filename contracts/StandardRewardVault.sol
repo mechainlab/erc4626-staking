@@ -4,17 +4,18 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/IRewardVault.sol";
 
 /**
- * @title RewardVault 奖励金库，用于发放利息
- * @dev 管理StakingHub的利息
+ * @title IRewardVault 奖励金库
+ * @dev 管理奖金和发放奖金
  *
- * @notice 协议奖励以实际链上状态为准，领取完则结束产生利息，资金逻辑以代码为准；
+ * @notice 协议奖励以实际链上状态为准，领取完则结束产生奖励，资金逻辑以代码为准；
  */
-contract RewardVault is Ownable {
+contract StandardRewardVault is IRewardVault, Ownable {
 
     /*//////////////////////////////////////////////////////////////
-                    状态变量
+                                状态变量
     //////////////////////////////////////////////////////////////*/
     address public assetAddress; //资产地址
     uint256 public lastAmount; //最近减半后余额
@@ -30,15 +31,15 @@ contract RewardVault is Ownable {
 
 
     /*//////////////////////////////////////////////////////////////
-                    资金逻辑
+                                资金逻辑
     //////////////////////////////////////////////////////////////*/
     /**
-     * @dev 发放利息.
+     * @dev 发放奖励.
      * @param recevier 领取地址
      * @param amount 金额
      *
      */
-    function transfer(address recevier, uint256 amount) public onlyOwner returns (bool)  {
+    function award(address recevier, uint256 amount) public override onlyOwner returns (bool)  {
         IERC20(assetAddress).transfer(recevier, amount);
         return true;
     }
@@ -57,7 +58,17 @@ contract RewardVault is Ownable {
      * @return 余额
      *
      */
-    function balance() public view returns (uint256)  {
+    function balance() public override view returns (uint256)  {
         return IERC20(assetAddress).balanceOf(address(this));
     }
+
+    /**
+     * @dev 查询奖励资产地址.
+     * @return 地址
+     *
+     */
+    function getAssetAddress() public override view returns (address) {
+        return assetAddress;
+    }
+    
 }

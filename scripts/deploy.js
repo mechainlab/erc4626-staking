@@ -36,7 +36,7 @@ async function main() {
   ///prepare fund of StakingHub
   // await aleoToken.transfer(stakingHub.address, 100000);
   await aleoToken.approve(stakingHub.address, 100 * 10 ** 6, overrides);
-  await stakingHub.prepareReward(100 * 10 ** 6, overrides);
+  await stakingHub.prepareRewardVault(100 * 10 ** 6, overrides);
 
   await new Promise((resolve, reject) => {
     setTimeout(function () {

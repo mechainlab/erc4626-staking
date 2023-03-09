@@ -24,7 +24,7 @@ describe("StakingHub Contract Test", function () {
 
     ///prepare rewardFund of StakingHub
     await aleoToken.approve(stakingHub.address, 100 * 10 ** 6);
-    await stakingHub.prepareReward(100 * 10 ** 6);
+    await stakingHub.prepareRewardVault(100 * 10 ** 6);
 
     await aleoToken.transfer(user1.getAddress(), 1000 * 10 ** 6);
 
