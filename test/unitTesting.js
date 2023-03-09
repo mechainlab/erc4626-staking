@@ -1,127 +1,121 @@
 const { expect } = require("chai");
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
-const Campaign_Artifact = require("../artifacts/contracts/Campaign.sol/Campaign.json")
-const Token_Artifact = require("../artifacts/contracts/Token.sol/TetherToken.json")
 require("hardhat-gas-reporter");
+const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json");
+const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
 
-// Ad3 contract uniting test
-describe("Ad3 contract", function () {
+// StakingHub contract uniting test
+describe("StakingHub Contract Test", function () {
 
-  async function deployAD3HubFixture() {
-    // Get the ContractFactory and Signers here.
-    const AD3Hub = await ethers.getContractFactory("AD3Hub");
-    const [owner, addr1, addr2] = await ethers.getSigners();
+  async function deployStakingHub() {
+    ///prepare deployer and user
+    const [deployer, user1, user2] = await ethers.getSigners();
 
-    const ad3Hub = await AD3Hub.deploy();
-    await ad3Hub.deployed();
-    // Fixtures can return anything you consider useful for your tests
-    return { ad3Hub, owner, addr1, addr2 };
+
+    ///deploy AleoToken
+    const AleoToken = await ethers.getContractFactory("AleoToken");
+    const aleoToken = await AleoToken.deploy(10 ** 6 * 10 ** 6); //totalSupply = $10 ** 6
+    await aleoToken.deployed();
+
+    ///delploy StakingHub
+    const StakingHub = await ethers.getContractFactory("StakingHub");
+    const stakingHub = await StakingHub.deploy(aleoToken.address, aleoToken.address, 500);
+    await stakingHub.deployed();
+
+    ///prepare rewardFund of StakingHub
+    await aleoToken.approve(stakingHub.address, 100 * 10 ** 6);
+    await stakingHub.prepareReward(100 * 10 ** 6);
+
+    await aleoToken.transfer(user1.getAddress(), 1000 * 10 ** 6);
+
+    // await new Promise((resolve, reject) => {
+    //   setTimeout(function () {
+    //     resolve('time')
+    //   }, 1000)
+    // })
+
+    return { stakingHub, aleoToken, deployer, user1 };
   }
 
-
-  // token of payment
-  async function deployPaymentToken() {
-    const USDT = await ethers.getContractFactory("TetherToken");
-    const token = await USDT.deploy(10 ** 12); //totalSupply = $10 ** 6
-    await token.deployed();
-    return { token };
-  }
-
-
-  async function deployCampaignImpl() {
-    // Get the ContractFactory and Signers here.
-    const Campaign = await ethers.getContractFactory("Campaign");
-
-    const campaign = await Campaign.deploy();
-    await campaign.deployed();
-    // Fixtures can return anything you consider useful for your tests
-    return { campaign };
-  }
-
-
-  //kols for deployment
-  async function getKolsFixtrue() {
-    const [owner, addr1, addr2] = await ethers.getSigners();
-    let kols = [
-      {
-        kolAddress: addr1.getAddress(),
-        fixedFee: 100,
-        ratio: 70,
-        paymentStage: 0,
-      },
-      {
-        kolAddress: addr2.getAddress(),
-        fixedFee: 100,
-        ratio: 70,
-        paymentStage: 0,
-      }
-    ];
-    return kols;
-  }
-
-  //kols for pushpay
-  async function getKolWithUsers() {
-    const [owner, addr1, addr2, addr3, addr4, addr5, addr6, addr7] = await ethers.getSigners();
-    let kolWithUsers = [
-      {
-        kolAddress: addr1.getAddress(),
-        users: [addr3.getAddress(), addr4.getAddress()]
-      },
-      {
-        kolAddress: addr2.getAddress(),
-        users: [addr5.getAddress(), addr6.getAddress()]
-
-      }
-    ];
-    return kolWithUsers;
-  }
-
-//kols for pushPayKol
-async function getKolWithUserQuantity() {
-  const [owner, addr1, addr2, addr3, addr4, addr5, addr6, addr7] = await ethers.getSigners();
-
-  let kolWithQuantity = [
-      {
-          kolAddress: addr1.getAddress(),
-          quantity: 2
-      },
-      {
-          kolAddress: addr2.getAddress(),
-          quantity: 3
-      }
-  ];
-
-  return kolWithQuantity;
-}
-
-  //kols for payfixFee
-  async function getKolsAddress() {
-    const [owner, addr1, addr2] = await ethers.getSigners();
-    let kols = [
-      addr1.getAddress(),
-      addr2.getAddress()
-    ];
-    return kols;
-  }
 
   // Test Deployment of Hub
-  describe("Deployment", function () {
+  describe("Deployment-Test", function () {
     it("Should set the right owner", async function () {
-      const { ad3Hub, owner } = await loadFixture(deployAD3HubFixture);
+      const { stakingHub, aleoToken, deployer, user1 } = await loadFixture(deployStakingHub);
       //Check ad3Hub's owner
-      expect(await ad3Hub.owner()).to.equal(owner.address);
+      expect(await stakingHub.owner()).to.equal(await deployer.getAddress());
     });
 
-    it("Should paymentAddess of ad3Hub equals setPaymentToken", async function () {
-      const { ad3Hub, owner } = await loadFixture(deployAD3HubFixture);
-      const { token } = await deployPaymentToken();
-
-      //Set and Check paymentToken
-      await ad3Hub.setPaymentToken(token.address);
-      let payment = await ad3Hub.getPaymentToken();
-      console.log("paymentAddess:" + payment);
-      expect(payment).to.equal(token.address);
+    it("Should be the correct amount", async function () {
+      const { stakingHub, aleoToken, deployer, user1 } = await loadFixture(deployStakingHub);
+      expect(await stakingHub.reviewRewardVault()).to.equal(100 * 10 ** 6);
+      expect(await stakingHub.reviewProtocol()).to.equal(0);
     });
   });
+
+
+  // Test Staking
+  describe("StakingAndWithdraw-Test", function () {
+    it("User's assets should be correct", async function () {
+      const { stakingHub, aleoToken, deployer, user1 } = await loadFixture(deployStakingHub);
+      // staking
+      let token = new ethers.Contract(aleoToken.address, Token_Artifact.abi, user1);
+      await token.approve(stakingHub.address, 1000 * 10 ** 6);
+
+      let StakingHub = new ethers.Contract(
+        stakingHub.address,
+        StakingHubArtifact.abi,
+        user1
+      );
+      await StakingHub.deposit(1000 * 10 ** 6, user1.getAddress());
+      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(1000 * 10 ** 6);
+      expect(await token.balanceOf(user1.getAddress())).to.equal(0);
+      expect(await stakingHub.reviewProtocol()).to.equal(1000 * 10 ** 6);
+
+      //withdraw
+      await StakingHub.withdraw(100 * 10 ** 6, user1.getAddress(), user1.getAddress());
+      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(900 * 10 ** 6);
+      expect(await token.balanceOf(user1.getAddress())).to.equal(100 * 10 ** 6);
+      expect(await stakingHub.reviewProtocol()).to.equal(900 * 10 ** 6);
+
+      // await new Promise((resolve, reject) => {
+      //   // await for award
+      //   setTimeout(function () {
+      //     resolve('time')
+      //   }, 5000)
+      // })
+      // expect(await stakingHub.reviewReward(user1.getAddress())).to.greaterThan(0);
+
+
+      //one more staking 
+      const [, , user3] = await ethers.getSigners();
+      await token.transfer(user3.getAddress(), 10 * 10 ** 6);
+
+      let token3 = new ethers.Contract(aleoToken.address, Token_Artifact.abi, user3);
+      await token3.approve(stakingHub.address, 10 * 10 ** 6);
+      let StakingHub3 = new ethers.Contract(
+        stakingHub.address,
+        StakingHubArtifact.abi,
+        user3
+      );
+      await StakingHub3.deposit(10 * 10 ** 6, user3.getAddress());
+      expect(await stakingHub.reviewAssets(user3.getAddress())).to.equal(10 * 10 ** 6);
+      expect(await token3.balanceOf(user3.getAddress())).to.equal(0);
+      expect(await stakingHub.reviewProtocol()).to.equal(910 * 10 ** 6);
+
+
+      //withdraw
+      await StakingHub3.withdrawAll();
+      expect(await stakingHub.reviewAssets(user3.getAddress())).to.equal(0);
+      expect(await token.balanceOf(user3.getAddress())).to.greaterThanOrEqual(10 * 10 ** 6);
+
+      expect(await stakingHub.reviewProtocol()).to.equal(900 * 10 ** 6);
+      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(900 * 10 ** 6);
+
+
+    });
+
+  });
+
 
 });

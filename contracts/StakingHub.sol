@@ -142,10 +142,9 @@ contract StakingHub is ERC4626, Ownable{
         require(balanceOf(msg.sender) > 0, "ERC4626: no balance");
         // 提取利息
         withdrawAllRewards();
-
         // 提取本金
-        uint256 assets = IERC20(super.asset()).balanceOf(msg.sender);
-        uint256 shares = previewWithdraw(assets);
+        uint256 shares = balanceOf(msg.sender);
+        uint256 assets = previewRedeem(shares);
         super._withdraw(_msgSender(), msg.sender, msg.sender, assets, shares);
 
         return shares;
