@@ -12,7 +12,7 @@ const overrides = {
 // yours, or create new ones.
 async function main() {
   ///Prepare deployer
-  let privateKey = "0x8d35ea35953931a53fa05da3f396be651102514b2eac740911cb9d0aca0f8e61";
+  let privateKey = "0x537682a041dc2a904573b6045bfbc9442940868b6aabaaa64bb4036677feb69a";
   let customHttpProvider = new ethers.providers.JsonRpcProvider(
     "http://47.242.179.164:9933"
   );
@@ -20,9 +20,9 @@ async function main() {
   console.log(signer.address);
 
   ///deposit
-  // let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
-  // console.log("approve...");
-  // await token.approve(stakingHub_address, 100 * 10 ** 6, overrides);
+  let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
+  console.log("approve...");
+  await token.approve(stakingHub_address, ethers.utils.parseUnits("1", 6), overrides);
 
   let StakingHub = new ethers.Contract(
     stakingHub_address,
@@ -30,7 +30,7 @@ async function main() {
     signer
   );
   let deposit = await StakingHub.deposit(
-    100 * 10 ** 6,
+    ethers.utils.parseUnits("1", 6),
     signer.address,
     overrides
   );
@@ -41,20 +41,22 @@ async function main() {
       resolve('time')
     }, 3000)
   })
+  let receipt = await customHttpProvider.getTransactionReceipt(deposit.hash);
+  // console.log(receipt);
 
   ///reviewAssets
   let reviewAssets = await StakingHub.reviewAssets(signer.address);
   console.log("user's staking balance: " + reviewAssets);
 
-  for (let i = 0; i < 10; i++) {
-    await new Promise((resolve, reject) => {
-      setTimeout(function () {
-        resolve('time')
-      }, 2000)
-    })
-    let staking_reward = await StakingHub.reviewReward(signer.address);
-    console.log("user's staking reward: " + staking_reward);
-  }
+  // for (let i = 0; i < 10; i++) {
+  //   await new Promise((resolve, reject) => {
+  //     setTimeout(function () {
+  //       resolve('time')
+  //     }, 2000)
+  //   })
+  //   let staking_reward = await StakingHub.reviewReward(signer.address);
+  //   console.log("user's staking reward: " + staking_reward);
+  // }
 }
 
 main()

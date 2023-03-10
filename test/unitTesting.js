@@ -5,6 +5,11 @@ const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json"
 const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
 const { BigNumber } = require("ethers")
 
+const overrides = {
+  gasLimit: 15000000,
+  gasPrice: 10 * 10 ** 9,
+};
+
 // StakingHub contract uniting test
 describe("StakingHub Contract Test", function () {
 
@@ -68,7 +73,8 @@ describe("StakingHub Contract Test", function () {
         StakingHubArtifact.abi,
         user1
       );
-      await StakingHub.deposit(1000 * 10 ** 6, user1.getAddress());
+      await StakingHub.deposit(1000 * 10 ** 6, user1.getAddress(), overrides);
+      // await StakingHub.deposit(100 * 10 ** 6, user1.getAddress(), overrides);
       let assets = Number(await stakingHub.reviewReward(user1.getAddress())) + (1000 * 10 ** 6);
       expect(await stakingHub.reviewAmount(user1.getAddress())).to.equal(1000 * 10 ** 6);
       expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(assets);
@@ -144,7 +150,7 @@ describe("StakingHub Contract Test", function () {
       await ethers.provider.send('evm_increaseTime', [timeInterval]);
       await ethers.provider.send('evm_mine');
 
-  
+
       const blockNumAfter = await ethers.provider.getBlockNumber();
       const blockAfter = await ethers.provider.getBlock(blockNumAfter);
       const timestampAfter = blockAfter.timestamp;
