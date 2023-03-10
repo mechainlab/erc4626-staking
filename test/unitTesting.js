@@ -69,23 +69,19 @@ describe("StakingHub Contract Test", function () {
         user1
       );
       await StakingHub.deposit(1000 * 10 ** 6, user1.getAddress());
-      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(1000 * 10 ** 6);
+      let assets = Number(await stakingHub.reviewReward(user1.getAddress())) + (1000 * 10 ** 6);
+      expect(await stakingHub.reviewAmount(user1.getAddress())).to.equal(1000 * 10 ** 6);
+      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(assets);
       expect(await token.balanceOf(user1.getAddress())).to.equal(0);
       expect(await stakingHub.reviewProtocol()).to.equal(1000 * 10 ** 6);
 
       //withdraw
       await StakingHub.withdraw(100 * 10 ** 6, user1.getAddress(), user1.getAddress());
-      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(900 * 10 ** 6);
+      expect(await stakingHub.reviewAmount(user1.getAddress())).to.equal(900 * 10 ** 6);
+      assets = Number(await stakingHub.reviewReward(user1.getAddress())) + (900 * 10 ** 6);
+      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(assets);
       expect(await token.balanceOf(user1.getAddress())).to.equal(100 * 10 ** 6);
       expect(await stakingHub.reviewProtocol()).to.equal(900 * 10 ** 6);
-
-      // await new Promise((resolve, reject) => {
-      //   // await for award
-      //   setTimeout(function () {
-      //     resolve('time')
-      //   }, 5000)
-      // })
-      // expect(await stakingHub.reviewReward(user1.getAddress())).to.greaterThan(0);
 
 
       //one more staking 
@@ -100,7 +96,8 @@ describe("StakingHub Contract Test", function () {
         user3
       );
       await StakingHub3.deposit(10 * 10 ** 6, user3.getAddress());
-      expect(await stakingHub.reviewAssets(user3.getAddress())).to.equal(10 * 10 ** 6);
+      assets = Number(await stakingHub.reviewReward(user3.getAddress())) + (10 * 10 ** 6);
+      expect(await stakingHub.reviewAssets(user3.getAddress())).to.equal(assets);
       expect(await token3.balanceOf(user3.getAddress())).to.equal(0);
       expect(await stakingHub.reviewProtocol()).to.equal(910 * 10 ** 6);
 
@@ -111,11 +108,62 @@ describe("StakingHub Contract Test", function () {
       expect(await token.balanceOf(user3.getAddress())).to.greaterThanOrEqual(10 * 10 ** 6);
 
       expect(await stakingHub.reviewProtocol()).to.equal(900 * 10 ** 6);
-      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(900 * 10 ** 6);
+      assets = Number(await stakingHub.reviewReward(user1.getAddress())) + (900 * 10 ** 6);
+      expect(await stakingHub.reviewAssets(user1.getAddress())).to.equal(assets);
 
+    }
+    );
+  });
+
+
+  // Test Staking
+  describe("PreviewRewards-Test", function () {
+    it("User's rewards should be correct", async function () {
+      const { stakingHub, aleoToken, deployer, user1 } = await loadFixture(deployStakingHub);
+      // staking
+      let token = new ethers.Contract(aleoToken.address, Token_Artifact.abi, user1);
+      await token.approve(stakingHub.address, 1000 * 10 ** 6);
+
+      let StakingHub = new ethers.Contract(
+        stakingHub.address,
+        StakingHubArtifact.abi,
+        user1
+      );
+      await StakingHub.deposit(1000 * 10 ** 6, user1.getAddress());
+      let rewards = await stakingHub.reviewReward(user1.getAddress());
+      console.log("=============================");
+      console.log("rewards:" + rewards);
+
+      const blockNumBefore = await ethers.provider.getBlockNumber();
+      const blockBefore = await ethers.provider.getBlock(blockNumBefore);
+      const timestampBefore = blockBefore.timestamp;
+      console.log("blockNumBefore:" + blockNumBefore);
+
+
+      const timeInterval = 60 * 60; //1 hour
+      await ethers.provider.send('evm_increaseTime', [timeInterval]);
+      await ethers.provider.send('evm_mine');
+
+  
+      const blockNumAfter = await ethers.provider.getBlockNumber();
+      const blockAfter = await ethers.provider.getBlock(blockNumAfter);
+      const timestampAfter = blockAfter.timestamp;
+      console.log("blockNumAfter:" + blockNumAfter);
+      console.log("timeInterval:" + timestampAfter - timestampBefore);
+
+
+      rewards = await stakingHub.reviewReward(user1.getAddress());
+      console.log("=============================");
+      console.log("rewards:" + rewards);//5707
+
+      await ethers.provider.send('evm_increaseTime', [timeInterval]);
+      await ethers.provider.send('evm_mine');
+
+      rewards = await stakingHub.reviewReward(user1.getAddress());
+      console.log("=============================");
+      console.log("rewards:" + rewards);
 
     });
-
   });
 
 

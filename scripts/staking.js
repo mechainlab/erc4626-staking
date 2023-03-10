@@ -29,18 +29,18 @@ async function main() {
     StakingHubArtifact.abi,
     signer
   );
-  // let deposit = await StakingHub.deposit(
-  //   100 * 10 ** 6,
-  //   signer.address,
-  //   overrides
-  // );
-  // console.log("deposit:" + deposit.hash);
+  let deposit = await StakingHub.deposit(
+    100 * 10 ** 6,
+    signer.address,
+    overrides
+  );
+  console.log("deposit:" + deposit.hash);
 
-  // await new Promise((resolve, reject) => {
-  //   setTimeout(function () {
-  //     resolve('time')
-  //   }, 3000)
-  // })
+  await new Promise((resolve, reject) => {
+    setTimeout(function () {
+      resolve('time')
+    }, 3000)
+  })
 
   ///reviewAssets
   let reviewAssets = await StakingHub.reviewAssets(signer.address);

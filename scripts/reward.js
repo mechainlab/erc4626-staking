@@ -37,23 +37,10 @@ async function withdrawRewards() {
     ///Withdraw rewards
     await StakingHub.withdrawRewards(1, overrides);
 
-    // 监听转账事件
-    // const filter = {
-    //     address: stakingHub_address,
-    //     topics: [ethers.utils.id("WithdrawRewards(address,uint256)")]
-    // };
-    // let filterFrom = StakingHub.filters.Deposit();
-
-
-    // customHttpProvider.on(filter, (log) => {
-    //     console.log(`withdrawRewards event detected:`);
-    //     console.log(log);
-    // });
-
     await new Promise((resolve, reject) => {
         setTimeout(function () {
             resolve('time')
-        }, 2000)
+        }, 1000)
     })
     staking_reward = await StakingHub.reviewReward(signer.address);
     console.log("user's staking reward: " + staking_reward);
@@ -88,6 +75,43 @@ async function withdraw() {
     })
     review_assets = await StakingHub.reviewAssets(signer.address);
     console.log("user's staking assets: " + review_assets);
+}
+
+
+async function previewRewards() {
+    ///Prepare provider 
+    let customHttpProvider = new ethers.providers.JsonRpcProvider(
+        "http://localhost:8545"
+    );
+
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const blockBefore = await ethers.provider.getBlock(blockNumBefore);
+    const timestampBefore = blockBefore.timestamp;
+    console.log("blockNumBefore:" + blockNumBefore);
+
+    ///Review reward
+    let StakingHub = new ethers.Contract(
+        stakingHub_address,
+        StakingHubArtifact.abi,
+        customHttpProvider
+    );
+    let staking_reward = await StakingHub.reviewReward(signer.address);
+    console.log("user's staking reward: " + staking_reward);
+
+
+    const timeInterval = 60 * 60; //1 hour
+    await ethers.provider.send('evm_increaseTime', [timeInterval]);
+    await ethers.provider.send('evm_mine');
+
+    const blockNumAfter = await ethers.provider.getBlockNumber();
+    const blockAfter = await ethers.provider.getBlock(blockNumAfter);
+    const timestampAfter = blockAfter.timestamp;
+    console.log("blockNumAfter:" + blockNumAfter);
+    console.log("timeInterval:" + timestampAfter - timestampBefore);
+
+    // expect(blockNumAfter).to.be.equal(blockNumBefore + 1);
+    // expect(timestampAfter).to.be.equal(timestampBefore + sevenDays);
+
 }
 
 main()

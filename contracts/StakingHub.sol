@@ -270,13 +270,21 @@ contract StakingHub is ERC4626, Ownable{
                               状态查询逻辑
     //////////////////////////////////////////////////////////////*/
     /**
-     * @dev 查询用户存款.
+     * @dev 查询用户总资产（存款+奖励）.
      * @param user 用户
      */
     function reviewAssets(address user) external view returns(uint256) {
         return _convertToAssets(balanceOf(user), Math.Rounding.Down) + reviewReward(user);
     }
 
+
+    /**
+     * @dev 查询用户存款.
+     * @param user 用户
+     */
+    function reviewAmount(address user) external view returns(uint256) {
+        return _convertToAssets(balanceOf(user), Math.Rounding.Down);
+    }
     /**
      * @dev 查询用户可领取奖励.
      * @param user 用户
