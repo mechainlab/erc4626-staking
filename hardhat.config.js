@@ -21,11 +21,11 @@ module.exports = {
     },
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_PROJECT_ID}`,
-      accounts: [GOERLI_PRIVATE_KEY]
+      accounts: ['0x8d35ea35953931a53fa05da3f396be651102514b2eac740911cb9d0aca0f8e61']
     },
     mumbai: {
-      url: `https://polygon-mumbai.g.alchemy.com/v2/YbE4U9U8b3M74_blueUn2wTDK83R0M2W1Ksf`,
-      accounts: [POLYGON_TEST_PRIVATE_KEY]
+      url: `https://polygon-mumbai.g.alchemy.com/v2/YbE4U9U8b3M74_Un2wTDK83R0M2W1Ksf`,
+      accounts: ['0x315bdde188acc16b06b41b3ccb06da359c2bbb5a60072b61aa13f907aaaeb782']
     },
     polygon: {
       url: `https://polygon-mainnet.g.alchemy.com/v2/bvL_Fraw7yQecq_blueU9WKVlKVuOyg4RJxK`,

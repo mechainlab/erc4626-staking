@@ -255,6 +255,15 @@ contract StakingHub is ERC4626, Ownable{
         IERC20(rewardAsset).transferFrom(msg.sender, _rewardValult, amount);
     }
 
+    /**
+     * @dev 修改利率.
+     * @param profitRate_ 金额
+     */
+    function changeProfitRate(uint16 profitRate_) external onlyOwner {
+        require(profitRate_ < 10000, "year's profit rate must less than 100%");
+        _profitRate = profitRate_;
+    }
+
     /*//////////////////////////////////////////////////////////////
                                限额逻辑
     //////////////////////////////////////////////////////////////*/
@@ -262,7 +271,7 @@ contract StakingHub is ERC4626, Ownable{
     function maxDeposit(address receiver) public view override returns (uint256) {
         uint256 balance = balanceOf(receiver);
         //max deposit is 10000;
-        return 10000 * 10 ** 6 - balance;
+        return 100000 * 10 ** 6 - balance;
     }
 
 

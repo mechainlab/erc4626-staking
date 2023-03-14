@@ -1,7 +1,8 @@
+const { BigNumber } = require("ethers")
 
 const overrides = {
   gasLimit: 15000000,
-  gasPrice: 10 * 10 ** 9,
+  gasPrice: 40 * 10 ** 9,
 };
 
 // This is a script for deploying your contracts. You can adapt it to deploy
@@ -19,7 +20,7 @@ async function main() {
 
   ///deploy AleoToken
   const AleoToken = await ethers.getContractFactory("AleoToken");
-  const aleoToken = await AleoToken.deploy(BigNumber.from(10 ** 12).mul(BigNumber.from(10 ** 6))); //totalSupply = $10**12 * 10**6
+  const aleoToken = await AleoToken.deploy(BigNumber.from(10 ** 12).mul(BigNumber.from(10 ** 6)),overrides); //totalSupply = $10**12 * 10**6
   await aleoToken.deployed();
   console.log("aleoToken address:", aleoToken.address);
 
@@ -35,8 +36,8 @@ async function main() {
 
   ///prepare fund of StakingHub
   // await aleoToken.transfer(stakingHub.address, 100000);
-  await aleoToken.approve(stakingHub.address, 100 * 10 ** 6, overrides);
-  await stakingHub.prepareRewardVault(100 * 10 ** 6, overrides);
+  await aleoToken.approve(stakingHub.address, 100000 * 10 ** 6, overrides);
+  await stakingHub.prepareRewardVault(100000 * 10 ** 6, overrides);
 
   await new Promise((resolve, reject) => {
     setTimeout(function () {

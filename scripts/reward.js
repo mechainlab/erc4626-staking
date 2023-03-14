@@ -16,7 +16,7 @@ async function main() {
 
 async function withdrawRewards() {
     ///Prepare deployer
-    let privateKey = "0x537682a041dc2a904573b6045bfbc9442940868b6aabaaa64bb4036677feb69a";
+    let privateKey = "0x8d35ea35953931a53fa05da3f396be651102514b2eac740911cb9d0aca0f8e61";
     let customHttpProvider = new ethers.providers.JsonRpcProvider(
         "http://47.242.179.164:9933"
     );
@@ -32,22 +32,22 @@ async function withdrawRewards() {
         StakingHubArtifact.abi,
         signer
     );
-    let staking_reward = await StakingHub.reviewReward("0x17155EE3e09033955D272E902B52E0c10cB47A91");
+    let staking_reward = await StakingHub.reviewReward("0xc6b4F991A13C77cD4eF65b81583E86421D9c924d");
     console.log("user's staking reward: " + staking_reward);
 
-    let reviewAssets = await StakingHub.reviewAssets("0x17155EE3e09033955D272E902B52E0c10cB47A91");
+    let reviewAssets = await StakingHub.reviewAssets("0xc6b4F991A13C77cD4eF65b81583E86421D9c924d");
     console.log("user's staking reviewAssets: " + reviewAssets);
 
-    // ///Withdraw rewards
-    // await StakingHub.withdrawRewards(1, overrides);
+    ///Withdraw rewards
+    await StakingHub.withdrawRewards(100, overrides);
 
-    // await new Promise((resolve, reject) => {
-    //     setTimeout(function () {
-    //         resolve('time')
-    //     }, 1000)
-    // })
-    // staking_reward = await StakingHub.reviewReward(signer.address);
-    // console.log("user's staking reward: " + staking_reward);
+    await new Promise((resolve, reject) => {
+        setTimeout(function () {
+            resolve('time')
+        }, 1000)
+    })
+    staking_reward = await StakingHub.reviewReward(signer.address);
+    console.log("user's staking reward: " + staking_reward);
 }
 
 async function withdraw() {

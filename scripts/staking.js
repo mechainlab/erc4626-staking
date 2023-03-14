@@ -1,20 +1,21 @@
-const aleo_address = "0x8bcEEE23a628C8bc98df37941Ad24bD950F1853F";
+const aleo_address = "0x9e1DC09d9d7C02C541F82227DddC1CabC9E94858";
 const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json");
-const stakingHub_address = "0x00BF3DEeEeD0F7cdDdEe197574B82b845013fDF7";
+const stakingHub_address = "0x27F6b66D37C61E3627b872935c302d319d12AC82";
 const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
+const { BigNumber } = require("ethers")
 
 const overrides = {
   gasLimit: 15000000,
-  gasPrice: 10 * 10 ** 9,
+  gasPrice: 10 * 10 ** 9
 };
 
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
 async function main() {
   ///Prepare deployer
-  let privateKey = "0x537682a041dc2a904573b6045bfbc9442940868b6aabaaa64bb4036677feb69a";
+  let privateKey = "0x315bdde188acc16b06b41b3ccb06da359c2bbb5a60072b61aa13f907aaaeb782";
   let customHttpProvider = new ethers.providers.JsonRpcProvider(
-    "http://47.242.179.164:9933"
+    "https://polygon-mumbai.g.alchemy.com/v2/YbE4U9U8b3M74_Un2wTDK83R0M2W1Ksf"
   );
   const signer = new ethers.Wallet(privateKey, customHttpProvider);
   console.log(signer.address);
@@ -22,26 +23,26 @@ async function main() {
   ///deposit
   let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
   console.log("approve...");
-  await token.approve(stakingHub_address, ethers.utils.parseUnits("1", 6), overrides);
+  // await token.approve(stakingHub_address, ethers.utils.parseUnits("10", 6), overrides);
 
   let StakingHub = new ethers.Contract(
     stakingHub_address,
     StakingHubArtifact.abi,
     signer
   );
-  let deposit = await StakingHub.deposit(
-    ethers.utils.parseUnits("1", 6),
-    signer.address,
-    overrides
-  );
-  console.log("deposit:" + deposit.hash);
+  // let deposit = await StakingHub.deposit(
+  //   ethers.utils.parseUnits("10", 6),
+  //   signer.address,
+  //   overrides
+  // );
+  // console.log("deposit:" + deposit.hash);
 
-  await new Promise((resolve, reject) => {
-    setTimeout(function () {
-      resolve('time')
-    }, 3000)
-  })
-  let receipt = await customHttpProvider.getTransactionReceipt(deposit.hash);
+  // await new Promise((resolve, reject) => {
+  //   setTimeout(function () {
+  //     resolve('time')
+  //   }, 1000)
+  // })
+  // let receipt = await customHttpProvider.getTransactionReceipt(deposit.hash);
   // console.log(receipt);
 
   ///reviewAssets
