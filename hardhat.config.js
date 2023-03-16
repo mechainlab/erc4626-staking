@@ -38,7 +38,11 @@ module.exports = {
     frondier: {
       url: `http://8.210.44.55:9933`,
       accounts: ['0x1667b42e9169b4a17fd62ebf339e449fcd1464b1db58d8e0518416cc58ec6d30']
-    }
+    },
+    hyperspace: {
+      url: `https://api.hyperspace.node.glif.io/rpc/v1`,
+      accounts: ['0xa1265c600f11166563cfc93f5f99b4a4a976201026046962fd700abf65707ac9']
+    }             
   },
   gasReporter: {
     enabled: false,

@@ -1,6 +1,6 @@
-const aleo_address = "0x9e1DC09d9d7C02C541F82227DddC1CabC9E94858";
+const aleo_address = "0x7616544bBe316Ab292801AD02A1ffFE3b5769C25";
 const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json");
-const stakingHub_address = "0x27F6b66D37C61E3627b872935c302d319d12AC82";
+const stakingHub_address = "0x794A4c01F765eC273Fce7F579D7dbcBE090699b2";
 const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
 const { BigNumber } = require("ethers")
 
@@ -13,9 +13,9 @@ const overrides = {
 // yours, or create new ones.
 async function main() {
   ///Prepare deployer
-  let privateKey = "0x315bdde188acc16b06b41b3ccb06da359c2bbb5a60072b61aa13f907aaaeb782";
+  let privateKey = "0xa1265c600f11166563cfc93f5f99b4a4a976201026046962fd700abf65707ac9";
   let customHttpProvider = new ethers.providers.JsonRpcProvider(
-    "https://polygon-mumbai.g.alchemy.com/v2/YbE4U9U8b3M74_Un2wTDK83R0M2W1Ksf"
+    "https://api.hyperspace.node.glif.io/rpc/v1"
   );
   const signer = new ethers.Wallet(privateKey, customHttpProvider);
   console.log(signer.address);
@@ -23,25 +23,24 @@ async function main() {
   ///deposit
   let token = new ethers.Contract(aleo_address, Token_Artifact.abi, signer);
   console.log("approve...");
-  // await token.approve(stakingHub_address, ethers.utils.parseUnits("10", 6), overrides);
+  await token.approve(stakingHub_address, ethers.utils.parseUnits("10", 6));
 
   let StakingHub = new ethers.Contract(
     stakingHub_address,
     StakingHubArtifact.abi,
     signer
   );
-  // let deposit = await StakingHub.deposit(
-  //   ethers.utils.parseUnits("10", 6),
-  //   signer.address,
-  //   overrides
-  // );
-  // console.log("deposit:" + deposit.hash);
+  let deposit = await StakingHub.deposit(
+    ethers.utils.parseUnits("10", 6),
+    signer.address
+  );
+  console.log("deposit:" + deposit.hash);
 
-  // await new Promise((resolve, reject) => {
-  //   setTimeout(function () {
-  //     resolve('time')
-  //   }, 1000)
-  // })
+  await new Promise((resolve, reject) => {
+    setTimeout(function () {
+      resolve('time')
+    }, 6000)
+  })
   // let receipt = await customHttpProvider.getTransactionReceipt(deposit.hash);
   // console.log(receipt);
 
