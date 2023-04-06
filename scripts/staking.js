@@ -13,7 +13,8 @@ const overrides = {
 // yours, or create new ones.
 async function main() {
   ///Prepare deployer
-  let privateKey = "0xa1265c600f11166563cfc93f5f99b4a4a976201026046962fd700abf65707ac9";
+  //0xa1265c600f11166563cfc93f5f99b4a4a976201026046962fd700abf65707ac9
+  let privateKey = "";
   let customHttpProvider = new ethers.providers.JsonRpcProvider(
     "https://api.hyperspace.node.glif.io/rpc/v1"
   );

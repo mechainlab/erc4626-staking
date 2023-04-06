@@ -108,6 +108,8 @@ contract StakingHub is ERC4626, Ownable{
         // 从协议转移资产到收款人地址，并为销毁owner对应数量的份额凭证
         ERC4626._withdraw(_msgSender(), receiver, owner, assets, shares);
 
+        mapping(address => uint256) memory tests;
+
         return shares;
     }
 
