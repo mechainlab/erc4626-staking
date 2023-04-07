@@ -1,4 +1,4 @@
-# Aleo-staking
+# Erc4626-Staking
 
 This repository contains a project about staking that deposit aleo and earn reward; 
 Based on ERC-4626;
