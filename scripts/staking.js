@@ -1,6 +1,6 @@
-const aleo_address = "0x7616544bBe316Ab292801AD02A1ffFE3b5769C25";
+const aleo_address = "0xba9AD610eD484d690C4d205e13E21BB709215437";
 const Token_Artifact = require("../artifacts/contracts/Token.sol/AleoToken.json");
-const stakingHub_address = "0x794A4c01F765eC273Fce7F579D7dbcBE090699b2";
+const stakingHub_address = "0xa8c5B5E6b05589976887f9BCd37E6bbdDd8cd6b5";
 const StakingHubArtifact = require("../artifacts/contracts/StakingHub.sol/StakingHub.json");
 const { BigNumber } = require("ethers")
 
@@ -16,7 +16,7 @@ async function main() {
   //0xa1265c600f11166563cfc93f5f99b4a4a976201026046962fd700abf65707ac9
   let privateKey = "";
   let customHttpProvider = new ethers.providers.JsonRpcProvider(
-    "https://api.hyperspace.node.glif.io/rpc/v1"
+    "https://eth-sepolia.g.alchemy.com/v2/3-VefB24BzwJ9dnkb9sKABundlDLZrRj"
   );
   const signer = new ethers.Wallet(privateKey, customHttpProvider);
   console.log(signer.address);

@@ -21,7 +21,11 @@ module.exports = {
     },
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_PROJECT_ID}`,
-      accounts: ['0x8d35ea35953931a53fa05da3f396be651102514b2eac740911cb9d0aca0f8e61']
+      accounts: ['0x1a82db40df07c58023286e517870af8a5c949902e12784d514b89462536ed0e2']
+    },
+    sepolia: {
+      url: `https://eth-sepolia.g.alchemy.com/v2/3-VefB24BzwJ9dnkb9sKABundlDLZrRj`,
+      accounts: ['0x1a82db40df07c58023286e517870af8a5c949902e12784d514b89462536ed0e2aaaa']
     },
     mumbai: {
       url: `https://polygon-mumbai.g.alchemy.com/v2/YbE4U9U8b3M74_Un2wTDK83R0M2W1Ksf`,

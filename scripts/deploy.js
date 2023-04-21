@@ -20,7 +20,7 @@ async function main() {
 
   ///deploy AleoToken
   const AleoToken = await ethers.getContractFactory("AleoToken");
-  const aleoToken = await AleoToken.deploy(BigNumber.from(10 ** 12).mul(BigNumber.from(10 ** 6)),overrides); //totalSupply = $10**12 * 10**6
+  const aleoToken = await AleoToken.deploy(BigNumber.from(10 ** 12).mul(BigNumber.from(10 ** 6))); //totalSupply = $10**12 * 10**6
   await aleoToken.deployed();
   console.log("aleoToken address:", aleoToken.address);
 
@@ -29,15 +29,15 @@ async function main() {
 
 
   ///delploy StakingHub
-  // const StakingHub = await ethers.getContractFactory("StakingHub");
-  // const stakingHub = await StakingHub.deploy(aleoToken.address, aleoToken.address, 500);
-  // await stakingHub.deployed();
-  // console.log("stakingHub address:", stakingHub.address);
+  const StakingHub = await ethers.getContractFactory("StakingHub");
+  const stakingHub = await StakingHub.deploy(aleoToken.address, aleoToken.address, 500);
+  await stakingHub.deployed();
+  console.log("stakingHub address:", stakingHub.address);
 
-  // ///prepare fund of StakingHub
-  // // await aleoToken.transfer(stakingHub.address, 100000);
-  // await aleoToken.approve(stakingHub.address, 100000 * 10 ** 6, overrides);
-  // await stakingHub.prepareRewardVault(100000 * 10 ** 6, overrides);
+  ///prepare fund of StakingHub
+  // await aleoToken.transfer(stakingHub.address, 100000);
+  await aleoToken.approve(stakingHub.address, 1000000 * 10 ** 6);
+  await stakingHub.prepareRewardVault(1000000 * 10 ** 6);
 
   // await new Promise((resolve, reject) => {
   //   setTimeout(function () {
@@ -45,8 +45,8 @@ async function main() {
   //   }, 3000)
   // })
 
-  // let reviewRewardVault = await stakingHub.reviewRewardVault();
-  // console.log("reviewRewardVault:" + reviewRewardVault);
+  let reviewRewardVault = await stakingHub.reviewRewardVault();
+  console.log("reviewRewardVault:" + reviewRewardVault);
 
 }
 
